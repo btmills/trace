@@ -32,7 +32,6 @@ html, body {
 	bottom: 0;
 	font-size: 14px;
 	font-family: 'Courier New', 'Courier', monospace;
-	overflow: scroll;
 }
 
 .ace_selection {
@@ -46,6 +45,13 @@ html, body {
 	background: #eee;
 	list-style-type: none;
 	border-bottom: 1px solid #aaa;
+	//position: fixed;
+	width: 100%;
+}
+
+#tree {
+	overflow: scroll;
+	height: 100%;
 }
 
 .scope {
@@ -76,6 +82,10 @@ html, body {
 
 .nested-4 {
 	background: #bbb;
+}
+
+.nested-5 {
+	background: #aaa;
 }
 
 .scope:hover {
