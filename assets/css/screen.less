@@ -1,3 +1,12 @@
+@import 'normalize.less';
+
+.box-sizing(@sizing: border-box) {
+	-ms-box-sizing: @sizing;
+	-moz-box-sizing: @sizing;
+	-webkit-box-sizing: @sizing;
+	box-sizing: @sizing;
+}
+
 html, body {
 	padding: 0;
 	margin: 0;
@@ -23,4 +32,56 @@ html, body {
 	bottom: 0;
 	font-size: 14px;
 	font-family: 'Courier New', 'Courier', monospace;
+	overflow: scroll;
+}
+
+.ace_selection {
+	background: #9d550f !important;
+}
+
+.scope {
+	padding: 10px;
+	margin: 10px;
+	min-height: 10px;
+}
+
+.nested-0 {
+	background: #fff;
+}
+
+.nested-1 {
+	background: #eee;
+}
+
+.nested-2 {
+	background: #ddd;
+}
+
+.nested-3 {
+	background: #ccc;
+}
+
+.nested-4 {
+	background: #bbb;
+}
+
+.scope:hover {
+	background: #dfd;
+}
+
+.variables {
+	padding-left: 10px;
+	margin: 0 0 0 10px;
+	list-style-type: none;
+	overflow: hidden;
+}
+
+.variable {
+	float: left;
+	padding: 5px;
+	cursor: pointer;
+
+	&:hover {
+		background: #fdd;
+	}
 }

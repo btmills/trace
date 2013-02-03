@@ -47,40 +47,76 @@ class Tree
 		return JSON.stringify @toObject(), null, 2
 
 
+Range = ace.require('ace/range').Range
+
 editor = ace.edit 'code'
 editor.setTheme 'ace/theme/monokai'
 editor.getSession().setMode 'ace/mode/javascript'
 editor.setShowPrintMargin false
 editor.getSession().on 'change', (event) ->
-	#try
-		display treeify(parse editor.getValue()).toObject()
-	#catch err
-	#	console.error err
-
-output = ace.edit 'output'
-output.setTheme 'ace/theme/monokai'
-output.getSession().setMode 'ace/mode/json'
-output.setReadOnly true
-output.setHighlightActiveLine false
-output.setShowPrintMargin false
+	try
+		display treeify(parse editor.getValue())
+	catch err
+		#console.error err
+		$('#output').html(err.toString())
 
 
 parse = (code) ->
-	try
-		esprima.parse code,
-			range: true
-	catch err
-		{ 'Parse error': err }
-		{}
+	esprima.parse code,
+		range: true
+		loc: true
+
+
+select = (loc) ->
+	{ start: { line: a, column: b }, end: { line: c, column: d }} = loc
+	editor.getSelection().setSelectionRange(new Range a-1, b, c-1, d)
+
+
+deselect = ->
+	editor.clearSelection()
 
 
 display = (data) ->
-	# try
-	# 	data = JSON.stringify(data, null, 2) unless typeof data == 'string'
-	# catch err
-	# 	data = { 'JSON error': err }
-	output.setValue(JSON.stringify(data, null, 2))
-	output.clearSelection()
+
+	render = (tree, nesting) ->
+		nesting ?= 0
+
+		scope = $('<div>')
+			.addClass('scope')
+			.addClass("nested-#{nesting}")
+		if tree.root().variables.length
+			variables = $('<ul>')
+				.addClass('variables')
+				.appendTo(scope)
+			# Need closure in loop
+			$.each(tree.root().variables, (indx, variable) ->
+				$('<li>')
+				.addClass('variable')
+				.text(variable.name)
+				.on('hover', (event) ->
+					switch event.type
+						when 'mouseenter'
+							select variable.loc
+
+						when 'mouseleave'
+							deselect()
+
+						else
+							# nothing
+				)
+				.on('click', ->
+					cur = tree
+					while cur?
+						console.log cur.root().variables
+						cur = cur.parent()
+				)
+				.appendTo(variables)
+			)
+		for child in tree._children
+			scope.append(render(child, nesting + 1))
+		return scope
+
+	$('#output').html render data
 
 
 
@@ -139,10 +175,17 @@ Syntax =
 
 class Scope
 
-	constructor: (@range) ->
-		@range ?= [0, 0]
+	constructor: (@loc) ->
+		@loc ?=
+			start:
+				column: 0
+				line: 0
+			end:
+				column: 0
+				line: 0
+		@range = [@loc.start.line, @loc.start.column, @loc.end.line, @loc.end.column]
 		@variables = []
-		console.log "new Scope([#{@range[0]}, #{@range[1]}])"
+		#console.log 'new Scope(%o)', @loc
 
 	add: (variable) ->
 		throw 'Variable must be an instance of Variable' unless variable instanceof Variable
@@ -152,10 +195,19 @@ class Scope
 		(variable.name for variable in @variables when variable.name == id).length > 0
 
 
+
 class Variable
 
-	constructor: (@name, @range) ->
-		console.log "new Variable('#{@name}', [#{@range[0]}, #{@range[1]}])"
+	constructor: (@name, @loc) ->
+		@loc ?=
+			start:
+				column: 0
+				line: 0
+			end:
+				column: 0
+				line: 0
+		@range = [@loc.start.line, @loc.start.column, @loc.end.line, @loc.end.column]
+		#console.log 'new Variable("%s", %o)', @name, @loc
 
 
 
@@ -172,11 +224,11 @@ treeify = (block, scope, declaration) ->
 		when 'Identifier'
 			if declaration
 				if not scope.root().has block.name
-					scope.root().add new Variable block.name, block.range
+					scope.root().add new Variable block.name, block.loc
 				else
 					console.log 'Variable %s already defined', block.name
 		when 'FunctionDeclaration', 'FunctionExpression'
-			local = new Tree scope, new Scope block.range
+			local = new Tree scope, new Scope block.loc
 			treeify block.id, scope
 			treeify block.params, local, true
 			treeify block.defaults, local
