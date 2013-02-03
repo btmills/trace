@@ -58,13 +58,39 @@ editor.getSession().on 'change', (event) ->
 		display treeify(parse editor.getValue())
 	catch err
 		#console.error err
-		$('#output').html(err.toString())
+		$('#chain').html()
+		$('#tree').html err.toString()
 
 
 parse = (code) ->
 	esprima.parse code,
 		range: true
 		loc: true
+
+
+showChain = (tree) ->
+	vars = []
+	cur = tree
+	while cur?
+		for variable in cur.root().variables
+			vars.push(variable) unless (item.name for item in vars when item.name == variable.name).length > 0
+		cur = cur.parent()
+	chain = $('#chain').html ''
+	$.each vars, (index, variable) ->
+		item = $('<li>')
+			.addClass('variable')
+			.text(variable.name)
+			.on 'hover', (event) ->
+				switch event.type
+					when 'mouseenter'
+						select variable.loc
+					when 'mouseleave'
+						deselect()
+					else
+						# Ignore
+			.appendTo chain
+
+
 
 
 select = (loc) ->
@@ -84,16 +110,19 @@ display = (data) ->
 		scope = $('<div>')
 			.addClass('scope')
 			.addClass("nested-#{nesting}")
+			.on 'click', (event) ->
+				event.stopPropagation()
+				showChain tree
 		if tree.root().variables.length
 			variables = $('<ul>')
 				.addClass('variables')
 				.appendTo(scope)
 			# Need closure in loop
-			$.each(tree.root().variables, (indx, variable) ->
+			$.each(tree.root().variables, (index, variable) ->
 				$('<li>')
 				.addClass('variable')
 				.text(variable.name)
-				.on('hover', (event) ->
+				.on 'hover', (event) ->
 					switch event.type
 						when 'mouseenter'
 							select variable.loc
@@ -103,20 +132,14 @@ display = (data) ->
 
 						else
 							# nothing
-				)
-				.on('click', ->
-					cur = tree
-					while cur?
-						console.log cur.root().variables
-						cur = cur.parent()
-				)
 				.appendTo(variables)
 			)
 		for child in tree._children
 			scope.append(render(child, nesting + 1))
 		return scope
 
-	$('#output').html render data
+	$('#chain').html('')
+	$('#tree').html render data
 
 
 
