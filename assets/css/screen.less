@@ -39,6 +39,8 @@ html, body {
 }
 
 #chain {
+	.box-sizing();
+
 	margin: 0;
 	overflow: hidden;
 	padding: 10px;
@@ -51,7 +53,10 @@ html, body {
 
 #tree {
 	overflow: scroll;
-	height: 100%;
+	position: absolute;
+	top: 21px;
+	bottom: 0;
+	width: 100%;
 }
 
 .scope {

@@ -59,6 +59,7 @@ editor.getSession().on 'change', (event) ->
 	catch err
 		#console.error err
 		$('#chain').html()
+		$('#tree').css('top', $('#chain').outerHeight());
 		$('#tree').html err.toString()
 
 
@@ -89,6 +90,7 @@ showChain = (tree) ->
 					else
 						# Ignore
 			.appendTo chain
+	$('#tree').css('top', chain.outerHeight());
 
 
 
@@ -139,6 +141,7 @@ display = (data) ->
 		return scope
 
 	$('#chain').html('')
+	$('#tree').css('top', $('#chain').outerHeight());
 	$('#tree').html render data
 
 
